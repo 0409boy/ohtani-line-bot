@@ -102,27 +102,29 @@ def get_play_by_play(game_pk):
     url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay"
     return mlb_get(url)
 
-
 def get_team_record():
-    today = get_today_jst()
+    try:
+        today = get_today_jst()
 
-    url = (
-        f"https://statsapi.mlb.com/api/v1/standings"
-        f"?leagueId=104&date={today}&hydrate=team"
-    )
+        url = (
+            f"https://statsapi.mlb.com/api/v1/standings"
+            f"?leagueId=104&date={today}&hydrate=team"
+        )
 
-    data = mlb_get(url)
+        data = mlb_get(url)
 
-    for record_group in data.get("records", []):
-        for team_record in record_group.get("teamRecords", []):
+        for record_group in data.get("records", []):
+            for team_record in record_group.get("teamRecords", []):
+                if team_record.get("team", {}).get("id") == TEAM_ID:
+                    wins = team_record.get("wins")
+                    losses = team_record.get("losses")
+                    return f"{wins}勝{losses}敗"
 
-            if team_record.get("team", {}).get("id") == TEAM_ID:
-                wins = team_record.get("wins")
-                losses = team_record.get("losses")
+        return "取得不可"
 
-                return f"{wins}勝{losses}敗"
-
-    return "取得不可"
+    except Exception as e:
+        print("Team record fetch error:", e)
+        return "取得不可"
 
 
 def get_ohtani_batting_average(boxscore):
