@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID")
 
-TEAM_ID = 119  # Dodgers
+TEAM_ID = 119
 OHTANI_ID = 660271
 STATE_FILE = "notified_state.json"
 
@@ -27,6 +27,7 @@ def save_state(state):
 
 
 def send_line(text):
+
     url = "https://api.line.me/v2/bot/message/push"
 
     headers = {
@@ -50,14 +51,19 @@ def send_line(text):
     print("LINE response:", response.text)
 
 
+def mlb_get(url):
+
+    response = requests.get(url, timeout=20)
+    response.raise_for_status()
+
+    return response.json()
+
+
 def get_today_jst():
+
     return datetime.now(JST).strftime("%Y-%m-%d")
 
 
-def mlb_get(url):
-    response = requests.get(url, timeout=20)
-    response.raise_for_status()
-    return response.json()
 def get_dodgers_game():
 
     now_jst = datetime.now(JST)
@@ -92,18 +98,80 @@ def get_dodgers_game():
     return None
 
 
+def get_next_game():
+
+    today = get_today_jst()
+
+    url = (
+        f"https://statsapi.mlb.com/api/v1/schedule"
+        f"?sportId=1&teamId={TEAM_ID}"
+        f"&startDate={today}&endDate=2100-01-01"
+    )
+
+    data = mlb_get(url)
+
+    dates = data.get("dates", [])
+
+    for date_block in dates:
+
+        games = date_block.get("games", [])
+
+        for game in games:
+
+            status = game.get("status", {}).get("abstractGameState")
+
+            if status == "Final":
+                continue
+
+            game_date = game.get("gameDate")
+
+            dt_utc = datetime.strptime(
+                game_date,
+                "%Y-%m-%dT%H:%M:%SZ"
+            ).replace(tzinfo=timezone.utc)
+
+            dt_jst = dt_utc.astimezone(JST)
+
+            weekdays = ["月", "火", "水", "木", "金", "土", "日"]
+
+            date_text = (
+                f"{dt_jst.month}/{dt_jst.day}"
+                f"({weekdays[dt_jst.weekday()]}) "
+                f"{dt_jst.strftime('%H:%M')}〜"
+            )
+
+            teams = game["teams"]
+
+            home = teams["home"]["team"]["name"]
+            away = teams["away"]["team"]["name"]
+
+            opponent = away if home == "Los Angeles Dodgers" else home
+
+            return f"""\n次回試合
+{date_text}
+ドジャース vs {opponent}"""
+
+    return ""
+
 
 def get_boxscore(game_pk):
+
     url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
+
     return mlb_get(url)
 
 
 def get_play_by_play(game_pk):
+
     url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay"
+
     return mlb_get(url)
 
+
 def get_team_record():
+
     try:
+
         today = get_today_jst()
 
         url = (
@@ -114,16 +182,22 @@ def get_team_record():
         data = mlb_get(url)
 
         for record_group in data.get("records", []):
+
             for team_record in record_group.get("teamRecords", []):
+
                 if team_record.get("team", {}).get("id") == TEAM_ID:
+
                     wins = team_record.get("wins")
                     losses = team_record.get("losses")
+
                     return f"{wins}勝{losses}敗"
 
         return "取得不可"
 
     except Exception as e:
+
         print("Team record fetch error:", e)
+
         return "取得不可"
 
 
@@ -280,6 +354,8 @@ def build_game_result_message(game, boxscore, pbp):
             "出場なし、または打席情報なし"
         )
 
+    next_game = get_next_game()
+
     message = f"""【試合結果】
 
 {date_text}
@@ -296,7 +372,7 @@ def build_game_result_message(game, boxscore, pbp):
 {avg}
 
 ドジャース成績
-{record}"""
+{record}{next_game}"""
 
     return message
 
