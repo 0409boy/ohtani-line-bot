@@ -58,29 +58,39 @@ def mlb_get(url):
     response = requests.get(url, timeout=20)
     response.raise_for_status()
     return response.json()
-
-
 def get_dodgers_game():
-    today = get_today_jst()
 
-    url = (
-        f"https://statsapi.mlb.com/api/v1/schedule"
-        f"?sportId=1&teamId={TEAM_ID}&date={today}&hydrate=team,linescore"
-    )
+    now_jst = datetime.now(JST)
 
-    data = mlb_get(url)
+    dates_to_check = [
+        (now_jst - timedelta(days=1)).strftime("%Y-%m-%d"),
+        now_jst.strftime("%Y-%m-%d")
+    ]
 
-    dates = data.get("dates", [])
+    for target_date in dates_to_check:
 
-    if not dates:
-        return None
+        url = (
+            f"https://statsapi.mlb.com/api/v1/schedule"
+            f"?sportId=1&teamId={TEAM_ID}&date={target_date}"
+            f"&hydrate=team,linescore"
+        )
 
-    games = dates[0].get("games", [])
+        data = mlb_get(url)
 
-    if not games:
-        return None
+        dates = data.get("dates", [])
 
-    return games[0]
+        if not dates:
+            continue
+
+        games = dates[0].get("games", [])
+
+        if not games:
+            continue
+
+        return games[0]
+
+    return None
+
 
 
 def get_boxscore(game_pk):
