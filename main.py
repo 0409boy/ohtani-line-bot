@@ -28,16 +28,15 @@ def save_state(state):
 
 def send_line(text):
 
-    url = "https://api.line.me/v2/bot/message/push"
+    url = "https://api.line.me/v2/bot/message/broadcast"
 
     headers = {
         "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
 
-    data = {
-        "to": LINE_USER_ID,
-        "messages": [
+ data = {
+    "messages": [
             {
                 "type": "text",
                 "text": text
