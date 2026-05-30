@@ -376,3 +376,125 @@ def build_game_result_message(game, boxscore, pbp):
     now = datetime.now(JST)
     weekdays = ["月", "火", "水", "木", "金", "土", "日"]
     date_text = f"{now.month}/{now.day}日({weekdays[now.weekday()]})"
+
+    starter = get_dodgers_starting_pitcher(boxscore)
+
+    batting_stats = get_ohtani_batting_stats(boxscore)
+    pitching_stats = get_ohtani_pitching_stats(boxscore)
+
+    record = get_team_record()
+
+    at_bats, _ = get_ohtani_at_bats_and_homers(pbp)
+
+    at_bat_lines = []
+
+    if at_bats:
+        for i, event in enumerate(at_bats, start=1):
+            at_bat_lines.append(f"{i}打席目　【{event}】")
+    else:
+        at_bat_lines.append("出場なし、または打席情報なし")
+
+    home_runs = batting_stats["home_runs"]
+    if home_runs != "取得不可":
+        home_runs_text = f"第{home_runs}号"
+    else:
+        home_runs_text = "取得不可"
+
+    next_game = get_next_game()
+
+    message = f"""【試合結果】
+
+{date_text}
+ドジャース vs {opponent_name_jp}
+{dodgers_score}-{opponent_score} {result_text}
+
+先発ドジャースピッチャー
+{starter}
+
+大谷翔平 全打席
+{chr(10).join(at_bat_lines)}
+
+大谷翔平 打撃成績
+打率 {batting_stats["avg"]}
+本塁打 {home_runs_text}
+
+大谷翔平 投手成績
+{pitching_stats["wins"]}勝{pitching_stats["losses"]}敗
+防御率 {pitching_stats["era"]}
+投球回 {pitching_stats["innings"]}回
+奪三振 {pitching_stats["strikeouts"]}
+WHIP {pitching_stats["whip"]}
+被打率 {pitching_stats["avg"]}
+
+ドジャース成績
+{record}{next_game}"""
+
+    return message
+
+
+def check_home_run(game, state):
+    game_pk = game["gamePk"]
+
+    status = game.get("status", {}).get("abstractGameState")
+
+    if status not in ["Live", "Final"]:
+        print("Game is not live/final.")
+        return
+
+    pbp = get_play_by_play(game_pk)
+    _, homers = get_ohtani_at_bats_and_homers(pbp)
+
+    for homer_id in homers:
+        unique_id = f"{game_pk}_{homer_id}"
+
+        if unique_id in state["home_runs"]:
+            print("Already notified HR:", unique_id)
+            continue
+
+        text = """【速報】
+大谷翔平 ホームラン‼"""
+
+        send_line(text)
+        state["home_runs"].append(unique_id)
+
+
+def check_game_result(game, state):
+    game_pk = game["gamePk"]
+    status = game.get("status", {}).get("abstractGameState")
+
+    if status != "Final":
+        print("Game not final.")
+        return
+
+    if game_pk in state["game_results"]:
+        print("Already notified game result.")
+        return
+
+    boxscore = get_boxscore(game_pk)
+    pbp = get_play_by_play(game_pk)
+
+    message = build_game_result_message(game, boxscore, pbp)
+
+    send_line(message)
+
+    state["game_results"].append(game_pk)
+
+
+def main():
+    state = load_state()
+
+    game = get_dodgers_game()
+
+    if not game:
+        print("No Dodgers game today.")
+        save_state(state)
+        return
+
+    check_home_run(game, state)
+    check_game_result(game, state)
+
+    save_state(state)
+
+
+if __name__ == "__main__":
+    main()
