@@ -4,7 +4,6 @@ import requests
 from datetime import datetime, timedelta, timezone
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_USER_ID = os.getenv("LINE_USER_ID")
 
 TEAM_ID = 119
 OHTANI_ID = 660271
@@ -27,7 +26,6 @@ def save_state(state):
 
 
 def send_line(text):
-
     url = "https://api.line.me/v2/bot/message/broadcast"
 
     headers = {
@@ -35,8 +33,8 @@ def send_line(text):
         "Content-Type": "application/json",
     }
 
- data = {
-    "messages": [
+    data = {
+        "messages": [
             {
                 "type": "text",
                 "text": text
@@ -51,20 +49,16 @@ def send_line(text):
 
 
 def mlb_get(url):
-
     response = requests.get(url, timeout=20)
     response.raise_for_status()
-
     return response.json()
 
 
 def get_today_jst():
-
     return datetime.now(JST).strftime("%Y-%m-%d")
 
 
 def get_dodgers_game():
-
     now_jst = datetime.now(JST)
 
     dates_to_check = [
@@ -73,7 +67,6 @@ def get_dodgers_game():
     ]
 
     for target_date in dates_to_check:
-
         url = (
             f"https://statsapi.mlb.com/api/v1/schedule"
             f"?sportId=1&teamId={TEAM_ID}&date={target_date}"
@@ -81,7 +74,6 @@ def get_dodgers_game():
         )
 
         data = mlb_get(url)
-
         dates = data.get("dates", [])
 
         if not dates:
@@ -98,7 +90,6 @@ def get_dodgers_game():
 
 
 def get_next_game():
-
     today = get_today_jst()
 
     url = (
@@ -108,15 +99,12 @@ def get_next_game():
     )
 
     data = mlb_get(url)
-
     dates = data.get("dates", [])
 
     for date_block in dates:
-
         games = date_block.get("games", [])
 
         for game in games:
-
             status = game.get("status", {}).get("abstractGameState")
 
             if status == "Final":
@@ -154,23 +142,17 @@ def get_next_game():
 
 
 def get_boxscore(game_pk):
-
     url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
-
     return mlb_get(url)
 
 
 def get_play_by_play(game_pk):
-
     url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay"
-
     return mlb_get(url)
 
 
 def get_team_record():
-
     try:
-
         today = get_today_jst()
 
         url = (
@@ -181,27 +163,20 @@ def get_team_record():
         data = mlb_get(url)
 
         for record_group in data.get("records", []):
-
             for team_record in record_group.get("teamRecords", []):
-
                 if team_record.get("team", {}).get("id") == TEAM_ID:
-
                     wins = team_record.get("wins")
                     losses = team_record.get("losses")
-
                     return f"{wins}勝{losses}敗"
 
         return "取得不可"
 
     except Exception as e:
-
         print("Team record fetch error:", e)
-
         return "取得不可"
 
 
 def get_ohtani_batting_average(boxscore):
-
     players = boxscore.get("teams", {}).get("away", {}).get("players", {})
     players.update(boxscore.get("teams", {}).get("home", {}).get("players", {}))
 
@@ -220,33 +195,24 @@ def get_ohtani_batting_average(boxscore):
 
 
 def get_dodgers_starting_pitcher(boxscore):
-
     for side in ["home", "away"]:
-
         team = boxscore.get("teams", {}).get(side, {})
 
         if team.get("team", {}).get("id") == TEAM_ID:
-
             pitcher_id = team.get("pitchers", [None])[0]
 
             if pitcher_id:
-
                 player = team.get("players", {}).get(f"ID{pitcher_id}", {})
-
-                return player.get("person", {}).get(
-                    "fullName",
-                    "取得不可"
-                )
+                return player.get("person", {}).get("fullName", "取得不可")
 
     return "取得不可"
 
 
 def convert_event(event):
-
     mapping = {
         "Home Run": "HR",
         "Walk": "四球",
-        "Single": "右安打",
+        "Single": "安打",
         "Double": "二塁打",
         "Triple": "三塁打",
         "Strikeout": "空振り三振",
@@ -262,12 +228,10 @@ def convert_event(event):
 
 
 def get_ohtani_at_bats_and_homers(pbp):
-
     at_bats = []
     homers = []
 
     for play in pbp.get("allPlays", []):
-
         matchup = play.get("matchup", {})
         batter = matchup.get("batter", {})
 
@@ -280,11 +244,7 @@ def get_ohtani_at_bats_and_homers(pbp):
         at_bats.append(convert_event(event))
 
         if "Home Run" in event:
-
-            unique_id = play.get(
-                "playEvents",
-                [{}]
-            )[-1].get(
+            unique_id = play.get("playEvents", [{}])[-1].get(
                 "playId",
                 str(play.get("about", {}).get("atBatIndex"))
             )
@@ -295,14 +255,10 @@ def get_ohtani_at_bats_and_homers(pbp):
 
 
 def build_game_result_message(game, boxscore, pbp):
-
     teams = game["teams"]
 
     home = teams["home"]
     away = teams["away"]
-
-    home_name = home["team"]["name"]
-    away_name = away["team"]["name"]
 
     home_score = home.get("score", 0)
     away_score = away.get("score", 0)
@@ -312,7 +268,7 @@ def build_game_result_message(game, boxscore, pbp):
     dodgers_score = home_score if dodgers_home else away_score
     opponent_score = away_score if dodgers_home else home_score
 
-    opponent_name = away_name if dodgers_home else home_name
+    opponent_name = away["team"]["name"] if dodgers_home else home["team"]["name"]
 
     result_text = (
         "ドジャース勝利"
@@ -321,18 +277,12 @@ def build_game_result_message(game, boxscore, pbp):
     )
 
     now = datetime.now(JST)
-
     weekdays = ["月", "火", "水", "木", "金", "土", "日"]
 
-    date_text = (
-        f"{now.month}/{now.day}日"
-        f"({weekdays[now.weekday()]})"
-    )
+    date_text = f"{now.month}/{now.day}日({weekdays[now.weekday()]})"
 
     starter = get_dodgers_starting_pitcher(boxscore)
-
     avg = get_ohtani_batting_average(boxscore)
-
     record = get_team_record()
 
     at_bats, _ = get_ohtani_at_bats_and_homers(pbp)
@@ -340,18 +290,10 @@ def build_game_result_message(game, boxscore, pbp):
     at_bat_lines = []
 
     if at_bats:
-
         for i, event in enumerate(at_bats, start=1):
-
-            at_bat_lines.append(
-                f"{i}打席目　【{event}】"
-            )
-
+            at_bat_lines.append(f"{i}打席目　【{event}】")
     else:
-
-        at_bat_lines.append(
-            "出場なし、または打席情報なし"
-        )
+        at_bat_lines.append("出場なし、または打席情報なし")
 
     next_game = get_next_game()
 
@@ -377,13 +319,11 @@ def build_game_result_message(game, boxscore, pbp):
 
 
 def check_home_run(game, state):
-
     game_pk = game["gamePk"]
 
     status = game.get("status", {}).get("abstractGameState")
 
     if status not in ["Live", "Final"]:
-
         print("Game is not live/final.")
         return
 
@@ -392,11 +332,9 @@ def check_home_run(game, state):
     _, homers = get_ohtani_at_bats_and_homers(pbp)
 
     for homer_id in homers:
-
         unique_id = f"{game_pk}_{homer_id}"
 
         if unique_id in state["home_runs"]:
-
             print("Already notified HR:", unique_id)
             continue
 
@@ -409,30 +347,22 @@ def check_home_run(game, state):
 
 
 def check_game_result(game, state):
-
     game_pk = game["gamePk"]
 
     status = game.get("status", {}).get("abstractGameState")
 
     if status != "Final":
-
         print("Game not final.")
         return
 
     if game_pk in state["game_results"]:
-
         print("Already notified game result.")
         return
 
     boxscore = get_boxscore(game_pk)
-
     pbp = get_play_by_play(game_pk)
 
-    message = build_game_result_message(
-        game,
-        boxscore,
-        pbp
-    )
+    message = build_game_result_message(game, boxscore, pbp)
 
     send_line(message)
 
@@ -440,21 +370,16 @@ def check_game_result(game, state):
 
 
 def main():
-
     state = load_state()
 
     game = get_dodgers_game()
 
     if not game:
-
         print("No Dodgers game today.")
-
         save_state(state)
-
         return
 
     check_home_run(game, state)
-
     check_game_result(game, state)
 
     save_state(state)
