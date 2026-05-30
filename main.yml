@@ -6,8 +6,8 @@ on:
   schedule:
     # 日本時間 04:00〜16:00 を15分刻み
     # UTCでは前日19:00〜当日07:00
-    - cron: "*/15 19-23 * * *"
-    - cron: "*/15 0-7 * * *"
+    - cron: "*/5 19-23 * * *"
+    - cron: "*/5 0-7 * * *"
 
 permissions:
   contents: write
