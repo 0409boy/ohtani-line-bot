@@ -1,10 +1,16 @@
-name: Ohtani Dodgers LINE Bot
+name: 大谷ドジャース LINEボット
 
 on:
-  schedule:
-    # 日本時間 09:00〜16:00 に毎時実行（UTC 00:00〜07:00）
-    - cron: '0 0-7 * * *'
   workflow_dispatch:
+
+  schedule:
+    # 日本時間 4:00〜16:55 を5分ごと監視
+    - cron: "*/5 19-23 * * *"
+    - cron: "*/5 0-7 * * *"
+
+concurrency:
+  group: ohtani-line-bot
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -22,21 +28,28 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
 
       - name: Run bot
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        run: python main.py
+        run: |
+          python main.py
 
-      - name: Commit notified games
+      - name: Commit notified state
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add notified_games.json || true
-          git commit -m "Update notified games" || echo "No changes to commit"
+
+          git pull --rebase || true
+
+          git add notified_state.json || true
+
+          git commit -m "Update notified state" || echo "No changes to commit"
+
           git push || echo "No changes to push"
