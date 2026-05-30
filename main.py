@@ -11,6 +11,68 @@ STATE_FILE = "notified_state.json"
 
 JST = timezone(timedelta(hours=9))
 
+TEAM_JP = {
+    "Arizona Diamondbacks": "アリゾナ・ダイヤモンドバックス",
+    "Atlanta Braves": "アトランタ・ブレーブス",
+    "Baltimore Orioles": "ボルチモア・オリオールズ",
+    "Boston Red Sox": "ボストン・レッドソックス",
+    "Chicago Cubs": "シカゴ・カブス",
+    "Chicago White Sox": "シカゴ・ホワイトソックス",
+    "Cincinnati Reds": "シンシナティ・レッズ",
+    "Cleveland Guardians": "クリーブランド・ガーディアンズ",
+    "Colorado Rockies": "コロラド・ロッキーズ",
+    "Detroit Tigers": "デトロイト・タイガース",
+    "Houston Astros": "ヒューストン・アストロズ",
+    "Kansas City Royals": "カンザスシティ・ロイヤルズ",
+    "Los Angeles Angels": "ロサンゼルス・エンゼルス",
+    "Los Angeles Dodgers": "ロサンゼルス・ドジャース",
+    "Miami Marlins": "マイアミ・マーリンズ",
+    "Milwaukee Brewers": "ミルウォーキー・ブルワーズ",
+    "Minnesota Twins": "ミネソタ・ツインズ",
+    "New York Mets": "ニューヨーク・メッツ",
+    "New York Yankees": "ニューヨーク・ヤンキース",
+    "Athletics": "アスレチックス",
+    "Philadelphia Phillies": "フィラデルフィア・フィリーズ",
+    "Pittsburgh Pirates": "ピッツバーグ・パイレーツ",
+    "San Diego Padres": "サンディエゴ・パドレス",
+    "San Francisco Giants": "サンフランシスコ・ジャイアンツ",
+    "Seattle Mariners": "シアトル・マリナーズ",
+    "St. Louis Cardinals": "セントルイス・カージナルス",
+    "Tampa Bay Rays": "タンパベイ・レイズ",
+    "Texas Rangers": "テキサス・レンジャーズ",
+    "Toronto Blue Jays": "トロント・ブルージェイズ",
+    "Washington Nationals": "ワシントン・ナショナルズ",
+}
+
+PITCHER_JP = {
+    "Paul Gervase": "ポール・ジャーベイス",
+    "Edgardo Henriquez": "エドガルド・エンリケス",
+    "Jonathan Hernández": "ジョナサン・ヘルナンデス",
+    "Kyle Hurt": "カイル・ハート",
+    "Will Klein": "ウィル・クライン",
+    "Eric Lauer": "エリック・ラウアー",
+    "Roki Sasaki": "佐々木朗希",
+    "Tanner Scott": "タナー・スコット",
+    "Emmet Sheehan": "エメット・シーハン",
+    "Blake Treinen": "ブレイク・トライネン",
+    "Alex Vesia": "アレックス・ベシア",
+    "Justin Wrobleski": "ジャスティン・ロブレスキー",
+    "Yoshinobu Yamamoto": "山本由伸",
+    "Shohei Ohtani": "大谷翔平",
+    "Tyler Glasnow": "タイラー・グラスノー",
+    "Blake Snell": "ブレイク・スネル",
+    "Dustin May": "ダスティン・メイ",
+    "Clayton Kershaw": "クレイトン・カーショウ",
+}
+
+
+def jp_team(name):
+    return TEAM_JP.get(name, name)
+
+
+def jp_pitcher(name):
+    return PITCHER_JP.get(name, name)
+
 
 def load_state():
     if not os.path.exists(STATE_FILE):
@@ -102,9 +164,7 @@ def get_next_game():
     dates = data.get("dates", [])
 
     for date_block in dates:
-        games = date_block.get("games", [])
-
-        for game in games:
+        for game in date_block.get("games", []):
             status = game.get("status", {}).get("abstractGameState")
 
             if status == "Final":
@@ -118,7 +178,6 @@ def get_next_game():
             ).replace(tzinfo=timezone.utc)
 
             dt_jst = dt_utc.astimezone(JST)
-
             weekdays = ["月", "火", "水", "木", "金", "土", "日"]
 
             date_text = (
@@ -128,7 +187,6 @@ def get_next_game():
             )
 
             teams = game["teams"]
-
             home = teams["home"]["team"]["name"]
             away = teams["away"]["team"]["name"]
 
@@ -136,7 +194,7 @@ def get_next_game():
 
             return f"""\n次回試合
 {date_text}
-ドジャース vs {opponent}"""
+ドジャース vs {jp_team(opponent)}"""
 
     return ""
 
@@ -176,22 +234,54 @@ def get_team_record():
         return "取得不可"
 
 
-def get_ohtani_batting_average(boxscore):
+def get_ohtani_batting_stats(boxscore):
     players = boxscore.get("teams", {}).get("away", {}).get("players", {})
     players.update(boxscore.get("teams", {}).get("home", {}).get("players", {}))
 
     player = players.get(f"ID{OHTANI_ID}")
 
     if not player:
-        return "取得不可"
+        return {
+            "avg": "取得不可",
+            "home_runs": "取得不可"
+        }
 
-    avg = (
-        player.get("seasonStats", {})
-        .get("batting", {})
-        .get("avg", "取得不可")
-    )
+    batting = player.get("seasonStats", {}).get("batting", {})
 
-    return avg
+    return {
+        "avg": batting.get("avg", "取得不可"),
+        "home_runs": batting.get("homeRuns", "取得不可")
+    }
+
+
+def get_ohtani_pitching_stats(boxscore):
+    players = boxscore.get("teams", {}).get("away", {}).get("players", {})
+    players.update(boxscore.get("teams", {}).get("home", {}).get("players", {}))
+
+    player = players.get(f"ID{OHTANI_ID}")
+
+    if not player:
+        return {
+            "wins": "取得不可",
+            "losses": "取得不可",
+            "era": "取得不可",
+            "innings": "取得不可",
+            "strikeouts": "取得不可",
+            "whip": "取得不可",
+            "avg": "取得不可"
+        }
+
+    pitching = player.get("seasonStats", {}).get("pitching", {})
+
+    return {
+        "wins": pitching.get("wins", "取得不可"),
+        "losses": pitching.get("losses", "取得不可"),
+        "era": pitching.get("era", "取得不可"),
+        "innings": pitching.get("inningsPitched", "取得不可"),
+        "strikeouts": pitching.get("strikeOuts", "取得不可"),
+        "whip": pitching.get("whip", "取得不可"),
+        "avg": pitching.get("avg", "取得不可")
+    }
 
 
 def get_dodgers_starting_pitcher(boxscore):
@@ -203,7 +293,8 @@ def get_dodgers_starting_pitcher(boxscore):
 
             if pitcher_id:
                 player = team.get("players", {}).get(f"ID{pitcher_id}", {})
-                return player.get("person", {}).get("fullName", "取得不可")
+                name = player.get("person", {}).get("fullName", "取得不可")
+                return jp_pitcher(name)
 
     return "取得不可"
 
@@ -222,6 +313,11 @@ def convert_event(event):
         "Pop Out": "邪飛",
         "Hit By Pitch": "死球",
         "Intent Walk": "申告敬遠",
+        "Sac Fly": "犠飛",
+        "Sac Bunt": "犠打",
+        "Field Error": "失策出塁",
+        "Forceout": "フォースアウト",
+        "Double Play": "併殺打",
     }
 
     return mapping.get(event, event)
@@ -269,6 +365,7 @@ def build_game_result_message(game, boxscore, pbp):
     opponent_score = away_score if dodgers_home else home_score
 
     opponent_name = away["team"]["name"] if dodgers_home else home["team"]["name"]
+    opponent_name_jp = jp_team(opponent_name)
 
     result_text = (
         "ドジャース勝利"
@@ -278,112 +375,4 @@ def build_game_result_message(game, boxscore, pbp):
 
     now = datetime.now(JST)
     weekdays = ["月", "火", "水", "木", "金", "土", "日"]
-
-    date_text = f"{now.month}/{now.day}日({weekdays[now.weekday()]})"
-
-    starter = get_dodgers_starting_pitcher(boxscore)
-    avg = get_ohtani_batting_average(boxscore)
-    record = get_team_record()
-
-    at_bats, _ = get_ohtani_at_bats_and_homers(pbp)
-
-    at_bat_lines = []
-
-    if at_bats:
-        for i, event in enumerate(at_bats, start=1):
-            at_bat_lines.append(f"{i}打席目　【{event}】")
-    else:
-        at_bat_lines.append("出場なし、または打席情報なし")
-
-    next_game = get_next_game()
-
-    message = f"""【試合結果】
-
-{date_text}
-ドジャース vs {opponent_name}
-{dodgers_score}-{opponent_score} {result_text}
-
-先発ドジャースピッチャー
-{starter}
-
-大谷翔平 全打席
-{chr(10).join(at_bat_lines)}
-
-大谷翔平 打率
-{avg}
-
-ドジャース成績
-{record}{next_game}"""
-
-    return message
-
-
-def check_home_run(game, state):
-    game_pk = game["gamePk"]
-
-    status = game.get("status", {}).get("abstractGameState")
-
-    if status not in ["Live", "Final"]:
-        print("Game is not live/final.")
-        return
-
-    pbp = get_play_by_play(game_pk)
-
-    _, homers = get_ohtani_at_bats_and_homers(pbp)
-
-    for homer_id in homers:
-        unique_id = f"{game_pk}_{homer_id}"
-
-        if unique_id in state["home_runs"]:
-            print("Already notified HR:", unique_id)
-            continue
-
-        text = """【速報】
-大谷翔平 ホームラン‼"""
-
-        send_line(text)
-
-        state["home_runs"].append(unique_id)
-
-
-def check_game_result(game, state):
-    game_pk = game["gamePk"]
-
-    status = game.get("status", {}).get("abstractGameState")
-
-    if status != "Final":
-        print("Game not final.")
-        return
-
-    if game_pk in state["game_results"]:
-        print("Already notified game result.")
-        return
-
-    boxscore = get_boxscore(game_pk)
-    pbp = get_play_by_play(game_pk)
-
-    message = build_game_result_message(game, boxscore, pbp)
-
-    send_line(message)
-
-    state["game_results"].append(game_pk)
-
-
-def main():
-    state = load_state()
-
-    game = get_dodgers_game()
-
-    if not game:
-        print("No Dodgers game today.")
-        save_state(state)
-        return
-
-    check_home_run(game, state)
-    check_game_result(game, state)
-
-    save_state(state)
-
-
-if __name__ == "__main__":
-    main()
+    date_text = f"{now.month}/{now.day}日({weekdays[now.weekday()]}
