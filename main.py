@@ -375,4 +375,4 @@ def build_game_result_message(game, boxscore, pbp):
 
     now = datetime.now(JST)
     weekdays = ["月", "火", "水", "木", "金", "土", "日"]
-    date_text = f"{now.month}/{now.day}日({weekdays[now.weekday()]}
+    date_text = f"{now.month}/{now.day}日({weekdays[now.weekday()]})"
