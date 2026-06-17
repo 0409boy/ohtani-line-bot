@@ -258,7 +258,7 @@ def get_ohtani_stats(boxscore):
     batting = player.get("seasonStats", {}).get("batting", {})
     pitching = player.get("seasonStats", {}).get("pitching", {})
 
-     = {
+    batting_stats = {
         "打率": batting.get("avg"),
         "本塁打": batting.get("homeRuns"),
     }
@@ -273,8 +273,7 @@ def get_ohtani_stats(boxscore):
         "被打率": pitching.get("avg"),
     }
 
-    return , pitching_stats
-
+    return batting_stats, pitching_stats
 
 def get_dodgers_starting_pitcher(boxscore):
     for side in ["home", "away"]:
