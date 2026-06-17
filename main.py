@@ -292,25 +292,55 @@ def get_dodgers_starting_pitcher(boxscore):
 
 
 def convert_event(event):
-    mapping = {
-        "Home Run": "HR",
-        "Walk": "四球",
-        "Single": "安打",
-        "Double": "二塁打",
-        "Triple": "三塁打",
-        "Strikeout": "空振り三振",
-        "Groundout": "ゴロ",
-        "Flyout": "飛",
-        "Lineout": "直",
-        "Pop Out": "邪飛",
-        "Hit By Pitch": "死球",
-        "Intent Walk": "申告敬遠",
-        "Sac Fly": "犠飛",
-        "Sac Bunt": "犠打",
-        "Field Error": "失策出塁",
-        "Forceout": "フォースアウト",
-        "Double Play": "併殺打",
-    }
+  mapping = {
+    "Home Run": "HR",
+    "Walk": "四球",
+    "Single": "ヒット",
+    "Double": "ツーベース",
+    "Triple": "スリーベース",
+
+    "Strikeout": "空振り三振",
+
+    "Groundout": "ゴロアウト",
+    "Flyout": "フライアウト",
+    "Lineout": "ライナーアウト",
+    "Pop Out": "内野フライアウト",
+
+    "Hit By Pitch": "死球",
+    "Intent Walk": "申告敬遠",
+
+    "Sac Fly": "犠牲フライ",
+    "Sac Bunt": "送りバント",
+
+    "Field Error": "エラーで出塁",
+
+    "Forceout": "ランナーがアウト",
+
+    "Double Play": "ダブルプレー",
+    "Grounded Into DP": "ダブルプレー",
+
+    "Fielders Choice": "相手がランナーをアウトにして出塁",
+
+    "Catcher Interference": "守備妨害",
+
+    "Reached on Error": "エラーで出塁",
+
+    "Bunt Groundout": "バントアウト",
+    "Bunt Pop Out": "バントフライアウト",
+
+    "Field Out": "アウト",
+    "Runner Out": "ランナーアウト",
+
+    "Sacrifice Fly Double Play": "犠牲フライダブルプレー",
+
+    "Strikeout Double Play": "三振ダブルプレー",
+
+    "Pickoff": "けん制アウト",
+
+    "Caught Stealing": "盗塁失敗",
+
+    "Stolen Base": "盗塁成功"
+}
 
     return mapping.get(event, event)
 
