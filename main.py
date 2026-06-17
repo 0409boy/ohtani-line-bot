@@ -3,7 +3,8 @@ import json
 import requests
 from datetime import datetime, timedelta, timezone
 
-LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+def send_line(text):
+LINE_USER_ID = os.getenv("LINE_USER_ID")
 
 TEAM_ID = 119
 OHTANI_ID = 660271
@@ -105,14 +106,14 @@ def send_line(text):
     }
 
     data = {
-    "to": LINE_USER_ID,
-    "messages": [
-        {
-            "type": "text",
-            "text": text
-        }
-    ]
-}
+        "to": LINE_USER_ID,
+        "messages": [
+            {
+                "type": "text",
+                "text": text
+            }
+        ]
+    }
 
     response = requests.post(url, headers=headers, json=data)
 
