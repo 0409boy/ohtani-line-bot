@@ -3,7 +3,7 @@ import json
 import requests
 from datetime import datetime, timedelta, timezone
 
-def send_line(text):
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID")
 
 TEAM_ID = 119
@@ -276,6 +276,7 @@ def get_ohtani_stats(boxscore):
 
     return batting_stats, pitching_stats
 
+
 def get_dodgers_starting_pitcher(boxscore):
     for side in ["home", "away"]:
         team = boxscore.get("teams", {}).get(side, {})
@@ -292,54 +293,36 @@ def get_dodgers_starting_pitcher(boxscore):
 
 
 def convert_event(event):
-
     mapping = {
         "Home Run": "HR",
         "Walk": "四球",
         "Single": "ヒット",
         "Double": "ツーベース",
         "Triple": "スリーベース",
-
         "Strikeout": "空振り三振",
-
         "Groundout": "ゴロアウト",
         "Flyout": "フライアウト",
         "Lineout": "ライナーアウト",
         "Pop Out": "内野フライアウト",
-
         "Hit By Pitch": "死球",
         "Intent Walk": "申告敬遠",
-
         "Sac Fly": "犠牲フライ",
         "Sac Bunt": "送りバント",
-
         "Field Error": "エラーで出塁",
-
         "Forceout": "ランナーがアウト",
-
         "Double Play": "ダブルプレー",
         "Grounded Into DP": "ダブルプレー",
-
         "Fielders Choice": "相手がランナーをアウトにして出塁",
-
         "Catcher Interference": "守備妨害",
-
         "Reached on Error": "エラーで出塁",
-
         "Bunt Groundout": "バントアウト",
         "Bunt Pop Out": "バントフライアウト",
-
         "Field Out": "アウト",
         "Runner Out": "ランナーアウト",
-
         "Sacrifice Fly Double Play": "犠牲フライダブルプレー",
-
         "Strikeout Double Play": "三振ダブルプレー",
-
         "Pickoff": "けん制アウト",
-
         "Caught Stealing": "盗塁失敗",
-
         "Stolen Base": "盗塁成功"
     }
 
@@ -386,6 +369,8 @@ def build_batting_text(batting_stats):
         return ""
 
     return "大谷翔平 打撃成績\n" + "\n".join(lines)
+
+
 def build_pitching_text(pitching_stats):
     lines = []
 
@@ -512,7 +497,7 @@ def check_home_run(game, state):
             continue
 
         boxscore = get_boxscore(game_pk)
-        batting_stats, pitching_stats = get_ohtani_stats(boxscore)
+        batting_stats, _ = get_ohtani_stats(boxscore)
         hr_total = batting_stats.get("本塁打", "")
 
         text = f"""【速報】
