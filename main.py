@@ -97,7 +97,7 @@ def save_state(state):
 
 
 def send_line(text):
-    url = "https://api.line.me/v2/bot/message/broadcast"
+    url = "https://api.line.me/v2/bot/message/push"
 
     headers = {
         "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
@@ -105,13 +105,14 @@ def send_line(text):
     }
 
     data = {
-        "messages": [
-            {
-                "type": "text",
-                "text": text
-            }
-        ]
-    }
+    "to": LINE_USER_ID,
+    "messages": [
+        {
+            "type": "text",
+            "text": text
+        }
+    ]
+}
 
     response = requests.post(url, headers=headers, json=data)
 
