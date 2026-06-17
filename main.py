@@ -291,55 +291,56 @@ def get_dodgers_starting_pitcher(boxscore):
 
 
 def convert_event(event):
-  mapping = {
-    "Home Run": "HR",
-    "Walk": "四球",
-    "Single": "ヒット",
-    "Double": "ツーベース",
-    "Triple": "スリーベース",
 
-    "Strikeout": "空振り三振",
+    mapping = {
+        "Home Run": "HR",
+        "Walk": "四球",
+        "Single": "ヒット",
+        "Double": "ツーベース",
+        "Triple": "スリーベース",
 
-    "Groundout": "ゴロアウト",
-    "Flyout": "フライアウト",
-    "Lineout": "ライナーアウト",
-    "Pop Out": "内野フライアウト",
+        "Strikeout": "空振り三振",
 
-    "Hit By Pitch": "死球",
-    "Intent Walk": "申告敬遠",
+        "Groundout": "ゴロアウト",
+        "Flyout": "フライアウト",
+        "Lineout": "ライナーアウト",
+        "Pop Out": "内野フライアウト",
 
-    "Sac Fly": "犠牲フライ",
-    "Sac Bunt": "送りバント",
+        "Hit By Pitch": "死球",
+        "Intent Walk": "申告敬遠",
 
-    "Field Error": "エラーで出塁",
+        "Sac Fly": "犠牲フライ",
+        "Sac Bunt": "送りバント",
 
-    "Forceout": "ランナーがアウト",
+        "Field Error": "エラーで出塁",
 
-    "Double Play": "ダブルプレー",
-    "Grounded Into DP": "ダブルプレー",
+        "Forceout": "ランナーがアウト",
 
-    "Fielders Choice": "相手がランナーをアウトにして出塁",
+        "Double Play": "ダブルプレー",
+        "Grounded Into DP": "ダブルプレー",
 
-    "Catcher Interference": "守備妨害",
+        "Fielders Choice": "相手がランナーをアウトにして出塁",
 
-    "Reached on Error": "エラーで出塁",
+        "Catcher Interference": "守備妨害",
 
-    "Bunt Groundout": "バントアウト",
-    "Bunt Pop Out": "バントフライアウト",
+        "Reached on Error": "エラーで出塁",
 
-    "Field Out": "アウト",
-    "Runner Out": "ランナーアウト",
+        "Bunt Groundout": "バントアウト",
+        "Bunt Pop Out": "バントフライアウト",
 
-    "Sacrifice Fly Double Play": "犠牲フライダブルプレー",
+        "Field Out": "アウト",
+        "Runner Out": "ランナーアウト",
 
-    "Strikeout Double Play": "三振ダブルプレー",
+        "Sacrifice Fly Double Play": "犠牲フライダブルプレー",
 
-    "Pickoff": "けん制アウト",
+        "Strikeout Double Play": "三振ダブルプレー",
 
-    "Caught Stealing": "盗塁失敗",
+        "Pickoff": "けん制アウト",
 
-    "Stolen Base": "盗塁成功"
-}
+        "Caught Stealing": "盗塁失敗",
+
+        "Stolen Base": "盗塁成功"
+    }
 
     return mapping.get(event, event)
 
