@@ -258,7 +258,7 @@ def get_ohtani_stats(boxscore):
     batting = player.get("seasonStats", {}).get("batting", {})
     pitching = player.get("seasonStats", {}).get("pitching", {})
 
-    batting_stats = {
+     = {
         "打率": batting.get("avg"),
         "本塁打": batting.get("homeRuns"),
     }
@@ -273,7 +273,7 @@ def get_ohtani_stats(boxscore):
         "被打率": pitching.get("avg"),
     }
 
-    return batting_stats, pitching_stats
+    return , pitching_stats
 
 
 def get_dodgers_starting_pitcher(boxscore):
@@ -372,13 +372,13 @@ def get_ohtani_at_bats_and_homers(pbp):
     return at_bats, homers
 
 
-def build_batting_text(batting_stats):
+def build_batting_text():
     lines = []
 
-    if valid(batting_stats.get("打率")):
-        lines.append(f"打率 {batting_stats['打率']}")
+    if valid(.get("打率")):
+        lines.append(f"打率 {['打率']}")
 
-    if valid(batting_stats.get("本塁打")):
+    if valid(.get("本塁打")):
         lines.append(f"本塁打 第{batting_stats['本塁打']}号")
 
     if not lines:
@@ -500,21 +500,31 @@ def check_home_run(game, state):
         print("Game is not live/final.")
         return
 
-    pbp = get_play_by_play(game_pk)
-    _, homers = get_ohtani_at_bats_and_homers(pbp)
+  pbp = get_play_by_play(game_pk)
+_, homers = get_ohtani_at_bats_and_homers(pbp)
 
-    for homer_id in homers:
-        unique_id = f"{game_pk}_{homer_id}"
+print("HOME RUN IDS:", homers)
 
-        if unique_id in state["home_runs"]:
-            print("Already notified HR:", unique_id)
-            continue
+for homer_id in homers:
 
-        text = """【速報】
-大谷翔平 ホームラン‼"""
+    unique_id = f"{game_pk}_{homer_id}"
 
-        send_line(text)
-        state["home_runs"].append(unique_id)
+    if unique_id in state["home_runs"]:
+        print("Already notified HR:", unique_id)
+        continue
+
+    boxscore = get_boxscore(game_pk)
+
+    batting_stats, pitching_stats = get_ohtani_stats(boxscore)
+
+    hr_total = batting_stats.get("本塁打", "")
+
+    text = f"""【速報】
+大谷翔平 第{hr_total}号ホームラン‼"""
+
+    send_line(text)
+
+    state["home_runs"].append(unique_id)
 
 
 def check_game_result(game, state):
