@@ -5,8 +5,8 @@ on:
 
   schedule:
     # 日本時間 4:00〜16:55 を5分ごと監視
-    - cron: "*/5 19-23 * * *"
-    - cron: "*/5 0-7 * * *"
+    - cron: "*/3 19-23 * * *"
+    - cron: "*/3 0-7 * * *"
 
 concurrency:
   group: ohtani-line-bot
