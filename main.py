@@ -372,21 +372,19 @@ def get_ohtani_at_bats_and_homers(pbp):
     return at_bats, homers
 
 
-def build_batting_text():
+def build_batting_text(batting_stats):
     lines = []
 
-    if valid(.get("打率")):
-        lines.append(f"打率 {['打率']}")
+    if valid(batting_stats.get("打率")):
+        lines.append(f"打率 {batting_stats['打率']}")
 
-    if valid(.get("本塁打")):
+    if valid(batting_stats.get("本塁打")):
         lines.append(f"本塁打 第{batting_stats['本塁打']}号")
 
     if not lines:
         return ""
 
     return "大谷翔平 打撃成績\n" + "\n".join(lines)
-
-
 def build_pitching_text(pitching_stats):
     lines = []
 
