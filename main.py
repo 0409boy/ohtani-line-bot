@@ -498,31 +498,27 @@ def check_home_run(game, state):
         print("Game is not live/final.")
         return
 
-  pbp = get_play_by_play(game_pk)
-_, homers = get_ohtani_at_bats_and_homers(pbp)
+    pbp = get_play_by_play(game_pk)
+    _, homers = get_ohtani_at_bats_and_homers(pbp)
 
-print("HOME RUN IDS:", homers)
+    print("HOME RUN IDS:", homers)
 
-for homer_id in homers:
+    for homer_id in homers:
+        unique_id = f"{game_pk}_{homer_id}"
 
-    unique_id = f"{game_pk}_{homer_id}"
+        if unique_id in state["home_runs"]:
+            print("Already notified HR:", unique_id)
+            continue
 
-    if unique_id in state["home_runs"]:
-        print("Already notified HR:", unique_id)
-        continue
+        boxscore = get_boxscore(game_pk)
+        batting_stats, pitching_stats = get_ohtani_stats(boxscore)
+        hr_total = batting_stats.get("本塁打", "")
 
-    boxscore = get_boxscore(game_pk)
-
-    batting_stats, pitching_stats = get_ohtani_stats(boxscore)
-
-    hr_total = batting_stats.get("本塁打", "")
-
-    text = f"""【速報】
+        text = f"""【速報】
 大谷翔平 第{hr_total}号ホームラン‼"""
 
-    send_line(text)
-
-    state["home_runs"].append(unique_id)
+        send_line(text)
+        state["home_runs"].append(unique_id)
 
 
 def check_game_result(game, state):
